@@ -22,6 +22,7 @@ from molmo_spaces.robots.floating_robotiq import FloatingRobotiqRobot
 from molmo_spaces.robots.floating_rum import FloatingRUMRobot
 from molmo_spaces.robots.franka import FrankaRobot
 from molmo_spaces.robots.i2rt_yam import I2rtYamRobot
+from molmo_spaces.robots.linearbot import LinearBot
 from molmo_spaces.robots.mobile_franka import MobileFrankaRobot
 from molmo_spaces.robots.rby1 import RBY1
 from molmo_spaces.robots.robot_views.abstract import RobotViewFactory
@@ -29,6 +30,7 @@ from molmo_spaces.robots.robot_views.bimanual_yam_view import BimanualYamRobotVi
 from molmo_spaces.robots.robot_views.franka_cap_view import (
     FrankaCAPRobotView,
 )
+from molmo_spaces.robots.robot_views.linearbot_view import LinearBotRobotView
 from molmo_spaces.robots.robot_views.franka_droid_view import (
     FloatingRobotiq2f85RobotView,
     FrankaDroidRobotView,
@@ -425,3 +427,40 @@ class BimanualYamRobotConfig(BaseRobotConfig):
             assert self.command_mode["gripper"] == "joint_position"
         if "arm" in self.command_mode:
             assert self.command_mode["arm"] in ["joint_position", "joint_rel_position"]
+
+
+class LinearBotConfig(BaseRobotConfig):
+    """Configuration for the LinearBot mobile bimanual robot.
+
+    The robot is loaded from its URDF. LinearBot.add_robot_to_scene() adds
+    position actuators for all URDF joints plus virtual holonomic base joints.
+    """
+
+    robot_cls: type[LinearBot] = LinearBot
+    robot_factory: Callable[[MjData, Any], Robot] | None = LinearBot
+    robot_view_factory: RobotViewFactory | None = LinearBotRobotView
+    robot_namespace: str = "robot_0/"
+    name: str = "linearbot"
+    robot_xml_path: Path = Path("linearbot_holobase.xml")
+
+    init_qpos: dict[str, list[float]] = {
+        "base": [0.0, 0.0, 0.0],  # x, y, theta
+        "lift": [0.0],
+        # joint2 and joint3 have asymmetric limits: R=[-π,0], L=[0,π].
+        # Zero sits at the limit boundary, so use ±π/3 to stay well inside.
+        "left_arm":  [0.0,  1.047, 1.047, 0.0, 0.0, 0.0],  # +π/3 for joint2,3
+        "right_arm": [0.0, -1.047, -1.047, 0.0, 0.0, 0.0],  # -π/3 for joint2,3
+        "left_gripper":  [0.0, -0.0475],  # open: joint7_L=0, joint8_L=-0.0475
+        "right_gripper": [0.0,  0.0],     # open: joint7_R=0, joint8_R=0
+    }
+    init_qpos_noise_range: dict[str, list[float]] | None = None
+
+    command_mode: dict[str, str | None] = {
+        "base": "holo_joint_planar_position",
+        "lift": "joint_position",
+        "left_arm": "joint_position",
+        "right_arm": "joint_position",
+        "left_gripper": "joint_position",
+        "right_gripper": "joint_position",
+    }
+    gravcomp: bool = True

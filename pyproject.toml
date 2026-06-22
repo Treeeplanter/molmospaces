@@ -17,7 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
 ]
-requires-python = ">=3.11"
+requires-python = "==3.11.*"
 dependencies = [
     "attrs",
     "beaker-py>2.0.0",
@@ -95,7 +95,9 @@ housegen = [
     # "bpy==3.6.0; os_name == 'Linux'", # removed because of challenges with docker builds - is installed separately in needed docker images
 ]
 curobo = [
-    "nvidia-curobo @ git+https://github.com/allenai/curobo.git@87e857d46fa5398f268c7f31d26566351be8671d",
+    "nvidia-curobo @ git+https://github.com/Treeeplanter/curobo.git@v1.0",
+    "cuda-python~=12.0",   # CUDA 12 bindings required by curobo v2 kernel backend
+    "cuda-core[cu12]",
 ]
 mujoco = [
     "mujoco~=3.5.0",
@@ -128,7 +130,6 @@ include-package-data = true
 [tool.uv]
 package = true
 environments = [
-    "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
 ]
 extra-index-url = ["https://pypi.org/simple", "https://test.pypi.org/simple/"]
